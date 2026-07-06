@@ -22,21 +22,25 @@ enum Renderer {
             throw .invalidOptions(description: "barHeight must be positive")
         }
 
-        let quietModules: Int
+        let isLinear = symbology.isLinear
+        let quiet: QuietZoneSpec
         switch options.quietZone {
-        case .standard: quietModules = symbology.standardQuietZoneModules
-        case .modules(let count): quietModules = max(0, count)
-        case .none: quietModules = 0
+        case .standard:
+            quiet = symbology.standardQuietZone
+        case .modules(let count):
+            let clamped = max(0, count)
+            quiet = QuietZoneSpec(
+                leading: clamped, trailing: clamped, vertical: isLinear ? 0 : clamped)
+        case .none:
+            quiet = QuietZoneSpec(leading: 0, trailing: 0, vertical: 0)
         }
 
-        // 1D symbologies take the quiet zone horizontally only.
         let module = options.moduleSize
-        let isLinear = symbology.isLinear
-        let columns = matrix.width + 2 * quietModules
+        let columns = matrix.width + quiet.leading + quiet.trailing
         let pixelWidth = Int((CGFloat(columns) * module).rounded(.up))
         let pixelHeight = isLinear
             ? Int(options.barHeight.rounded(.up))
-            : Int((CGFloat(matrix.height + 2 * quietModules) * module).rounded(.up))
+            : Int((CGFloat(matrix.height + 2 * quiet.vertical) * module).rounded(.up))
 
         guard
             let context = CGContext(
@@ -57,16 +61,19 @@ enum Renderer {
         context.fill(CGRect(x: 0, y: 0, width: pixelWidth, height: pixelHeight))
         context.setFillColor(options.foregroundColor.cgColor)
 
-        func pixelEdge(ofModule index: Int) -> Int {
-            Int((CGFloat(quietModules + index) * module).rounded())
+        func horizontalEdge(ofModule index: Int) -> Int {
+            Int((CGFloat(quiet.leading + index) * module).rounded())
+        }
+        func verticalEdge(ofModule index: Int) -> Int {
+            Int((CGFloat(quiet.vertical + index) * module).rounded())
         }
 
         for y in 0..<matrix.height {
-            let top = isLinear ? 0 : pixelEdge(ofModule: y)
-            let bottom = isLinear ? pixelHeight : pixelEdge(ofModule: y + 1)
+            let top = isLinear ? 0 : verticalEdge(ofModule: y)
+            let bottom = isLinear ? pixelHeight : verticalEdge(ofModule: y + 1)
             for x in 0..<matrix.width where matrix[x, y] {
-                let left = pixelEdge(ofModule: x)
-                let right = pixelEdge(ofModule: x + 1)
+                let left = horizontalEdge(ofModule: x)
+                let right = horizontalEdge(ofModule: x + 1)
                 // CoreGraphics' origin is bottom-left; matrix row 0 is the top.
                 context.fill(CGRect(
                     x: CGFloat(left),
