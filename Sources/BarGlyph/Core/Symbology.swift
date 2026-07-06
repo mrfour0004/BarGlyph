@@ -27,6 +27,11 @@ public enum Symbology: Sendable, Equatable {
     /// encoded with byte compaction; dimensions and error correction level are
     /// selected automatically.
     case pdf417
+
+    /// Aztec — 2D barcode common on transport tickets. Compact/full format and
+    /// layer count are selected automatically; error correction fills all
+    /// remaining capacity (23% + 3 words minimum). Needs no quiet zone.
+    case aztec
 }
 
 extension Symbology {
@@ -104,6 +109,8 @@ extension Symbology {
             QREncoder(errorCorrection: errorCorrection)
         case .pdf417:
             PDF417Encoder()
+        case .aztec:
+            AztecEncoder()
         }
     }
 
@@ -112,7 +119,7 @@ extension Symbology {
     var isLinear: Bool {
         switch self {
         case .code39, .code128, .ean13, .ean8, .upcA: true
-        case .qr, .pdf417: false
+        case .qr, .pdf417, .aztec: false
         }
     }
 
@@ -125,6 +132,7 @@ extension Symbology {
         case .upcA: .linear(leading: 9, trailing: 9)
         case .qr: .uniform(4)
         case .pdf417: .uniform(2)
+        case .aztec: .uniform(0)
         }
     }
 
