@@ -18,11 +18,51 @@ public enum Symbology: Sendable, Equatable {
     /// UPC-A — North American retail barcode; structurally an EAN-13 with a
     /// leading zero. Accepts 11 or 12 digits.
     case upcA
+
+    /// QR Code — general-purpose 2D barcode. Content is encoded in byte mode
+    /// as UTF-8; version (size) is selected automatically.
+    case qr(errorCorrection: QRErrorCorrection)
 }
 
 extension Symbology {
     /// Code 39 without a check digit.
     public static var code39: Symbology { .code39(includeCheckDigit: false) }
+
+    /// QR Code with medium (~15%) error correction.
+    public static var qr: Symbology { .qr(errorCorrection: .medium) }
+
+    /// QR Code error correction level: the fraction of codewords that can be
+    /// restored after damage.
+    public enum QRErrorCorrection: Sendable, Equatable {
+        /// ~7% recovery.
+        case low
+        /// ~15% recovery.
+        case medium
+        /// ~25% recovery.
+        case quartile
+        /// ~30% recovery.
+        case high
+
+        /// Row index in the specification capacity tables (L, M, Q, H order).
+        var tableIndex: Int {
+            switch self {
+            case .low: 0
+            case .medium: 1
+            case .quartile: 2
+            case .high: 3
+            }
+        }
+
+        /// The two-bit level indicator carried in the format information.
+        var formatBits: Int {
+            switch self {
+            case .low: 1
+            case .medium: 0
+            case .quartile: 3
+            case .high: 2
+            }
+        }
+    }
 }
 
 /// Specification-required quiet zone, in modules, per side.
@@ -55,6 +95,8 @@ extension Symbology {
             EANEncoder(variant: .ean8)
         case .upcA:
             EANEncoder(variant: .upcA)
+        case .qr(let errorCorrection):
+            QREncoder(errorCorrection: errorCorrection)
         }
     }
 
@@ -63,6 +105,7 @@ extension Symbology {
     var isLinear: Bool {
         switch self {
         case .code39, .code128, .ean13, .ean8, .upcA: true
+        case .qr: false
         }
     }
 
@@ -73,6 +116,7 @@ extension Symbology {
         case .ean13: .linear(leading: 11, trailing: 7)
         case .ean8: .linear(leading: 7, trailing: 7)
         case .upcA: .linear(leading: 9, trailing: 9)
+        case .qr: .uniform(4)
         }
     }
 }
