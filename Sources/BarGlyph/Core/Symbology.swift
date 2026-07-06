@@ -4,6 +4,9 @@ public enum Symbology: Sendable, Equatable {
     ///
     /// - Parameter includeCheckDigit: Appends the optional modulo-43 check character.
     case code39(includeCheckDigit: Bool)
+
+    /// Code 128 — full-ASCII 1D barcode with automatic code set optimization.
+    case code128
 }
 
 extension Symbology {
@@ -17,6 +20,8 @@ extension Symbology {
         switch self {
         case .code39(let includeCheckDigit):
             Code39Encoder(includeCheckDigit: includeCheckDigit)
+        case .code128:
+            Code128Encoder()
         }
     }
 
@@ -24,14 +29,14 @@ extension Symbology {
     /// row to the requested bar height.
     var isLinear: Bool {
         switch self {
-        case .code39: true
+        case .code39, .code128: true
         }
     }
 
     /// The quiet zone the symbology's specification requires, in modules.
     var standardQuietZoneModules: Int {
         switch self {
-        case .code39: 10
+        case .code39, .code128: 10
         }
     }
 }
