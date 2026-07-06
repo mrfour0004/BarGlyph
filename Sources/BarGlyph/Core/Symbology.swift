@@ -22,6 +22,11 @@ public enum Symbology: Sendable, Equatable {
     /// QR Code — general-purpose 2D barcode. Content is encoded in byte mode
     /// as UTF-8; version (size) is selected automatically.
     case qr(errorCorrection: QRErrorCorrection)
+
+    /// PDF417 — stacked 2D barcode used on IDs and boarding passes. Content is
+    /// encoded with byte compaction; dimensions and error correction level are
+    /// selected automatically.
+    case pdf417
 }
 
 extension Symbology {
@@ -97,6 +102,8 @@ extension Symbology {
             EANEncoder(variant: .upcA)
         case .qr(let errorCorrection):
             QREncoder(errorCorrection: errorCorrection)
+        case .pdf417:
+            PDF417Encoder()
         }
     }
 
@@ -105,7 +112,7 @@ extension Symbology {
     var isLinear: Bool {
         switch self {
         case .code39, .code128, .ean13, .ean8, .upcA: true
-        case .qr: false
+        case .qr, .pdf417: false
         }
     }
 
@@ -117,6 +124,16 @@ extension Symbology {
         case .ean8: .linear(leading: 7, trailing: 7)
         case .upcA: .linear(leading: 9, trailing: 9)
         case .qr: .uniform(4)
+        case .pdf417: .uniform(2)
+        }
+    }
+
+    /// How many module heights one matrix row occupies when rendered. Stacked
+    /// symbologies draw tall rows: PDF417 specifies a 3:1 row height.
+    var rowHeightMultiplier: Int {
+        switch self {
+        case .pdf417: 3
+        default: 1
         }
     }
 }

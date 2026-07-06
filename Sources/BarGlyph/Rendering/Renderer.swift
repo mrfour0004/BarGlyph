@@ -36,11 +36,12 @@ enum Renderer {
         }
 
         let module = options.moduleSize
+        let rowHeight = symbology.rowHeightMultiplier
         let columns = matrix.width + quiet.leading + quiet.trailing
         let pixelWidth = Int((CGFloat(columns) * module).rounded(.up))
         let pixelHeight = isLinear
             ? Int(options.barHeight.rounded(.up))
-            : Int((CGFloat(matrix.height + 2 * quiet.vertical) * module).rounded(.up))
+            : Int((CGFloat(matrix.height * rowHeight + 2 * quiet.vertical) * module).rounded(.up))
 
         guard
             let context = CGContext(
@@ -65,7 +66,7 @@ enum Renderer {
             Int((CGFloat(quiet.leading + index) * module).rounded())
         }
         func verticalEdge(ofModule index: Int) -> Int {
-            Int((CGFloat(quiet.vertical + index) * module).rounded())
+            Int((CGFloat(quiet.vertical + index * rowHeight) * module).rounded())
         }
 
         for y in 0..<matrix.height {

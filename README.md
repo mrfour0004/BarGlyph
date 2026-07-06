@@ -44,7 +44,7 @@ let matrix = try BarGlyph.matrix(for: "ABC-123", symbology: .code39)
 | Code 128 | 1D | ✅ |
 | EAN-13 / EAN-8 / UPC-A | 1D | ✅ |
 | QR Code | 2D | ✅ |
-| PDF417 | 2D | Planned |
+| PDF417 | 2D | ✅ |
 | Aztec | 2D | Planned |
 
 ## License
